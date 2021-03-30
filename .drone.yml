@@ -1,0 +1,9 @@
+kind: pipeline
+name: gcc
+type: docker
+
+steps:
+        - name: gcc-build
+          image: gcc
+          commands:
+                  - make
