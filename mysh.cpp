@@ -3,7 +3,9 @@
 #include <sstream>
 #include <vector>
 #include <fstream>
+#include <string.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 
@@ -33,6 +35,7 @@ class Shell {
 		void CheckFile(std::string filename);
 		void CreateFile(std::string filename);
 		void CopyContents(std::string sourceFile, std::string destinationFile);
+		void CopyDir(std::string sourceDir, std::string destinationDir);
 };
 
 // The Prompt Prototype
@@ -231,6 +234,7 @@ void Shell::ExecuteCommand(std::string command) {
 	//Copy Directory
 	else if (!splitCommand[0].compare("coppyabode")) {
 		if (splitCommand.size() == 3) {
+			CopyDir(splitCommand[1], splitCommand[2]);
 		}
 		else {
 			std::cout << "Incorrect Amount of Parameters!" << std::endl;
@@ -493,5 +497,65 @@ void Shell::CopyContents(std::string sourceFile, std::string destinationFile) {
 	//The Source File Does Not Exist
 	else {
 		std::cout << "Source File Does Not Exist!" << std::endl;
+	}
+}
+
+//Copy a Directory and Its Contents into Another
+void Shell::CopyDir(std::string sourceDir, std::string destinationDir) {
+	//Handle Relative Paths
+	sourceDir = ConvertToAbsolute(sourceDir);
+	destinationDir = ConvertToAbsolute(destinationDir);
+
+	//Check if the Source and Destination Directories Exist and are Directories
+	struct stat statbuf;
+
+	//The Source Directory Exists and is a Directory
+	if (!stat(sourceDir.c_str(), &statbuf) && statbuf.st_mode & S_IFDIR) {
+		//The Destination Directory Exists and is a Directory
+		if (!stat(destinationDir.c_str(), &statbuf) && statbuf.st_mode & S_IFDIR) {
+			//Open the Source and Destination Directories
+			struct dirent *dp;
+			DIR *sdp = opendir(sourceDir.c_str());
+			DIR *ddp = opendir(destinationDir.c_str());
+			if (sdp && ddp) {
+				//Read While there are Files in the Source Directory
+				while((dp = readdir(sdp)) != NULL) {
+					//Do Not Work on . (Alias for Current Dir) or .. (Alias for Parent Dir) Directories
+					if (strcmp(dp->d_name, ".") && strcmp(dp->d_name, "..")) {
+						std::cout << dp->d_name << std::endl;
+						std::string newSourceDir = sourceDir + "/" + dp->d_name;
+						if (!stat(newSourceDir.c_str(), &statbuf) && statbuf.st_mode & S_IFDIR) {
+							CopyDir(newSourceDir, destinationDir);
+						}
+					}
+				}
+
+				//Close the Source and Destination Directories
+				closedir(ddp);
+				closedir(sdp);
+			}
+
+			else if (!sdp && !ddp) {
+				std::cout << "Could Not Open Either the Source or Destination Directories" << std::endl;
+			}
+
+			else if (!sdp) {
+				std::cout << "Could Not Open the Source Directory" << std::endl;
+			}
+
+			else {
+				std::cout << "Could Not Open the Destination Directory" << std::endl;
+			}
+		}
+
+		//The Destination Directory Does Not Exist or is Not a Directory
+		else {
+			std::cout << "The Destination Directory Either Does Not Exist or is Not a Directory!" << std::endl;
+		}
+	}
+
+	//The Source Directory Does Not Exist or is Not a Directory
+	else {
+		std::cout << "The Source Directory Either Does Not Exist or is Not a Directory!" << std::endl;
 	}
 }

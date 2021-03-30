@@ -24,3 +24,12 @@ coppy input /home/christopher/outfile
 byebye
 coppy input /home/christopher/outfile
 byebye
+coppyabode /home/christopher /root
+byebye
+coppyabode /home/christopher /root
+coppyabode /home/christopher/Pictures /home/christopher
+byebye
+coppyabode /home/christopher/Documents /home/christopher/Pictures
+byebye
+coppyabode /home/christopher/Documents /home/christopher
+byebye
