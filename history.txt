@@ -18,3 +18,9 @@ byebye
 maik /home/christopher/Downloads
 maik /home/christopher/maiktest
 byebye
+coppy file1 file2
+byebye
+coppy input /home/christopher/outfile
+byebye
+coppy input /home/christopher/outfile
+byebye

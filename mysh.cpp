@@ -30,8 +30,9 @@ class Shell {
 		void KillSystem(int pid);
 		void KillAll();
 		void RepeatedCommand(std::vector<std::string> splitCommand);
-		void CheckFile(std::string filenameStr);
-		void CreateFile(std::string filenameStr);
+		void CheckFile(std::string filename);
+		void CreateFile(std::string filename);
+		void CopyContents(std::string sourceFile, std::string destinationFile);
 };
 
 // The Prompt Prototype
@@ -219,6 +220,7 @@ void Shell::ExecuteCommand(std::string command) {
 	//Copy File Data
 	else if (!splitCommand[0].compare("coppy")) {
 		if (splitCommand.size() == 3) {
+			CopyContents(splitCommand[1], splitCommand[2]);
 		}
 		else {
 			std::cout << "Incorrect Amount of Parameters!" << std::endl;
@@ -388,21 +390,15 @@ void Shell::RepeatedCommand(std::vector<std::string> splitCommand) {
 }
 
 // Checks if a File Exists and if it is a Directory
-void Shell::CheckFile(std::string filenameStr) {
+void Shell::CheckFile(std::string filename) {
 	//Handle Relative Paths
-	filenameStr = ConvertToAbsolute(filenameStr);
-
-	//Create a Char Array to Check if Directory Exists
-	char filename[filenameStr.size() + 1];
-	filenameStr.copy(filename, filenameStr.size() + 1);
-	filename[filenameStr.size()] = '\0';
-
+	filename = ConvertToAbsolute(filename);
 
 	//Create Buffer for Stat
 	struct stat statbuf;
 
 	//The File Exists
-	if (!stat(filename, &statbuf)) {
+	if (!stat(filename.c_str(), &statbuf)) {
 		//The File is a Directory
 		if (statbuf.st_mode & S_IFDIR) {
 			std::cout << "Abode is." << std::endl;
@@ -421,27 +417,81 @@ void Shell::CheckFile(std::string filenameStr) {
 }
 
 // Creates a File if it Does Not Exist
-void Shell::CreateFile(std::string filenameStr) {
+void Shell::CreateFile(std::string filename) {
 	//Handle Relative Paths
-	filenameStr = ConvertToAbsolute(filenameStr);
-
-	//Create a Char Array to Check if Directory Exists
-	char filename[filenameStr.size() + 1];
-	filenameStr.copy(filename, filenameStr.size() + 1);
-	filename[filenameStr.size()] = '\0';
+	filename = ConvertToAbsolute(filename);
 
 	//Check if File Exists
 	struct stat statbuf;
 
 	//The File Does Not Exist
-	if (stat(filename, &statbuf)) {
+	if (stat(filename.c_str(), &statbuf)) {
 		std::ofstream outFile;
-		outFile.open(filenameStr);
+		outFile.open(filename);
 		outFile << "Draft" << std::endl;
+		outFile.close();
 	}
 
 	//The File Exists
 	else {
 		std::cout << "The File Already Exists. Not Performing Any Action." << std::endl;
+	}
+}
+
+// Copy the Contents from One File to Another
+void Shell::CopyContents(std::string sourceFile, std::string destinationFile) {
+	//Handle Relative Paths
+	sourceFile = ConvertToAbsolute(sourceFile);
+	destinationFile = ConvertToAbsolute(destinationFile);
+
+	//Find the Path of the Destination
+	std::string destinationPath;
+	for (unsigned int i = 0; i < destinationFile.length(); i++) {
+		if (destinationFile[i] == '/') {
+			destinationPath = destinationFile.substr(0, i);
+		}
+	}
+	std::cout << destinationPath << std::endl;
+
+	//Check if the Source and Destination Files Exist
+	struct stat statbuf;
+
+	//The Source File Exists
+	if (!stat(sourceFile.c_str(), &statbuf)) {
+		//The Destination File Does Not Exist and Its Parent Directory Exists
+		if (stat(destinationFile.c_str(), &statbuf) && !stat(destinationPath.c_str(), &statbuf)) {
+			//Set Input File
+			std::ifstream inFile;
+			inFile.open(sourceFile);
+
+			//Set Output File
+			std::ofstream outFile;
+			outFile.open(destinationFile);
+
+			//Copy the Data
+			std::string currentLine;
+			while(getline(inFile, currentLine)) {
+				outFile << currentLine << std::endl;
+			}
+
+			//Close the Files
+			outFile.close();
+			inFile.close();
+		}
+
+		//The Destination's Parent Directory Does Not Exist
+		else if (stat(destinationPath.c_str(), &statbuf)) {
+			std::cout << "The Destination File's Parent Directory Does Not Exist!" << std::endl;
+		}
+
+		//The Destination File Exists
+		else if (!stat(destinationFile.c_str(), &statbuf)) {
+			std::cout << "The Destination File Already Exists. Not Performing Any Action." << std::endl;
+		}
+	}
+
+	//The Source File Does Not Exist
+	else {
+		std::cout << "Source File Does Not Exist!" << std::endl;
 	}
 }
