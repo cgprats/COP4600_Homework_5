@@ -1,0 +1,11 @@
+dwelt tes
+dwelt README.md
+byebye
+dwelt out/mysh.out
+dwelt out
+dwelt etd
+dwelt /etc/sysconfig
+dwelt /etc/sysconfig/network
+dwelt /etc/fstab
+dwelt /etc/kernel
+byebye

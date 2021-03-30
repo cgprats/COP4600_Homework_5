@@ -5,6 +5,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 // The Shell Class
 class Shell {
@@ -28,6 +29,7 @@ class Shell {
 		void KillSystem(int pid);
 		void KillAll();
 		void RepeatedCommand(std::vector<std::string> splitCommand);
+		void CheckFile(std::string filenameStr);
 };
 
 // The Prompt Prototype
@@ -182,6 +184,48 @@ void Shell::ExecuteCommand(std::string command) {
 		KillAll();
 	}
 
+	//Check if a File Exists
+	else if (!splitCommand[0].compare("dwelt")) {
+		if (splitCommand.size() == 2) {
+			CheckFile(splitCommand[1]);
+		}
+		else {
+			std::cout << "Incorrect Amount of Parameters!" << std::endl;
+			std::cout << "The correct syntax is dwelt file" << std::endl;
+		}
+	}
+
+	//Create a New File
+	else if (!splitCommand[0].compare("maik")) {
+		if (splitCommand.size() == 2) {
+		}
+		else {
+			std::cout << "Incorrect Amount of Parameters!" << std::endl;
+			std::cout << "The correct syntax is maik file" << std::endl;
+		}
+	}
+
+	//Copy File Data
+	else if (!splitCommand[0].compare("coppy")) {
+		if (splitCommand.size() == 3) {
+		}
+		else {
+			std::cout << "Incorrect Amount of Parameters!" << std::endl;
+			std::cout << "The correct syntax is coppy from-file to-file" << std::endl;
+		}
+	}
+
+	//Copy Directory
+	else if (!splitCommand[0].compare("coppyabode")) {
+		if (splitCommand.size() == 3) {
+		}
+		else {
+			std::cout << "Incorrect Amount of Parameters!" << std::endl;
+			std::cout << "The correct syntax is coppyabode source-dir target-dir" << std::endl;
+		}
+	}
+
+	//Handle an Unknown Command
 	else {
 		std::cout << "Command Not Found" << std::endl;
 	}
@@ -331,5 +375,39 @@ void Shell::RepeatedCommand(std::vector<std::string> splitCommand) {
 	//Execute the Repeated Command
 	for (int i = 0; i < numRepetitions; i++) {
 		ExecSystem(splitCommand);
+	}
+}
+
+// Checks if a File Exists and if it is a Directory
+void Shell::CheckFile(std::string filenameStr) {
+	//Handle Relative Paths
+	if (filenameStr.at(0) != '/') {
+		filenameStr = currentDirectory + '/' + filenameStr;
+	}
+
+	//Create a Char Array to Check if Directory Exists
+	char filename[filenameStr.size() + 1];
+	filenameStr.copy(filename, filenameStr.size() + 1);
+	filename[filenameStr.size()] = '\0';
+
+
+	//Check if File Exists
+	struct stat statbuf;
+	//The File Exists
+	if (!stat(filename, &statbuf)) {
+		//The File is a Directory
+		if (statbuf.st_mode & S_IFDIR) {
+			std::cout << "Abode is." << std::endl;
+		}
+
+		//The File is a Regular File
+		else if (statbuf.st_mode & S_IFREG) {
+			std::cout << "Dwelt indeed." << std::endl;
+		}
+	}
+
+	//The File Does Not Exist
+	else {
+		std::cout << "Dwelt not." << std::endl;
 	}
 }
