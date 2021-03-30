@@ -15,6 +15,7 @@ class Shell {
 		std::vector<int> backgroundPid;
 	public:
 		Shell(std::string startingDirectory);
+		std::string ConvertToAbsolute(std::string location);
 		void SetCurrentDirectory(std::string currentDirectory);
 		std::string GetCurrentDirectory();
 		void ExecuteCommand(std::string command);
@@ -30,6 +31,7 @@ class Shell {
 		void KillAll();
 		void RepeatedCommand(std::vector<std::string> splitCommand);
 		void CheckFile(std::string filenameStr);
+		void CreateFile(std::string filenameStr);
 };
 
 // The Prompt Prototype
@@ -70,12 +72,20 @@ Shell::Shell(std::string startingDirectory) {
 	ImportHistory();
 }
 
+// Convert a Relative Path into an Absolute Path
+std::string Shell::ConvertToAbsolute(std::string directory) {
+	//Convert to Absolute if Relative
+	if (directory.at(0) != '/') {
+		directory = currentDirectory + '/' + directory;
+	}
+
+	return directory;
+}
+
 // Set the Working Directory
 void Shell::SetCurrentDirectory(std::string newCurrentDirectory) {
 	//Convert Relative Path to Absolute
-	if (newCurrentDirectory.at(0) != '/') {
-		newCurrentDirectory = currentDirectory + '/' + newCurrentDirectory;
-	}
+	newCurrentDirectory = ConvertToAbsolute(newCurrentDirectory);
 
 	//Create a Char Array to Check if Directory Exists
 	char checkDir[newCurrentDirectory.size() + 1];
@@ -198,6 +208,7 @@ void Shell::ExecuteCommand(std::string command) {
 	//Create a New File
 	else if (!splitCommand[0].compare("maik")) {
 		if (splitCommand.size() == 2) {
+			CreateFile(splitCommand[1]);
 		}
 		else {
 			std::cout << "Incorrect Amount of Parameters!" << std::endl;
@@ -285,9 +296,7 @@ void Shell::ReplayCommand(int n) {
 // Execute a System Command
 void Shell::ExecSystem(std::vector<std::string> splitCommand) {
 	//Convert Relative Path to Absolute
-	if (splitCommand[1].at(0) != '/') {
-		splitCommand[1] = currentDirectory + '/' + splitCommand[1];
-	}
+	splitCommand[1] = ConvertToAbsolute(splitCommand[1]);
 
 	//Convert the Split Command Vector into an Array of Char Pointers
 	std::vector<char*> commandVector;
@@ -381,9 +390,7 @@ void Shell::RepeatedCommand(std::vector<std::string> splitCommand) {
 // Checks if a File Exists and if it is a Directory
 void Shell::CheckFile(std::string filenameStr) {
 	//Handle Relative Paths
-	if (filenameStr.at(0) != '/') {
-		filenameStr = currentDirectory + '/' + filenameStr;
-	}
+	filenameStr = ConvertToAbsolute(filenameStr);
 
 	//Create a Char Array to Check if Directory Exists
 	char filename[filenameStr.size() + 1];
@@ -391,8 +398,9 @@ void Shell::CheckFile(std::string filenameStr) {
 	filename[filenameStr.size()] = '\0';
 
 
-	//Check if File Exists
+	//Create Buffer for Stat
 	struct stat statbuf;
+
 	//The File Exists
 	if (!stat(filename, &statbuf)) {
 		//The File is a Directory
@@ -409,5 +417,31 @@ void Shell::CheckFile(std::string filenameStr) {
 	//The File Does Not Exist
 	else {
 		std::cout << "Dwelt not." << std::endl;
+	}
+}
+
+// Creates a File if it Does Not Exist
+void Shell::CreateFile(std::string filenameStr) {
+	//Handle Relative Paths
+	filenameStr = ConvertToAbsolute(filenameStr);
+
+	//Create a Char Array to Check if Directory Exists
+	char filename[filenameStr.size() + 1];
+	filenameStr.copy(filename, filenameStr.size() + 1);
+	filename[filenameStr.size()] = '\0';
+
+	//Check if File Exists
+	struct stat statbuf;
+
+	//The File Does Not Exist
+	if (stat(filename, &statbuf)) {
+		std::ofstream outFile;
+		outFile.open(filenameStr);
+		outFile << "Draft" << std::endl;
+	}
+
+	//The File Exists
+	else {
+		std::cout << "The File Already Exists. Not Performing Any Action." << std::endl;
 	}
 }

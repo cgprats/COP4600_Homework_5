@@ -9,3 +9,12 @@ dwelt /etc/sysconfig/network
 dwelt /etc/fstab
 dwelt /etc/kernel
 byebye
+maik README.md
+maik testMaik
+byebye
+maik README.md
+maik testfile
+byebye
+maik /home/christopher/Downloads
+maik /home/christopher/maiktest
+byebye
