@@ -460,8 +460,8 @@ void Shell::CopyContents(std::string sourceFile, std::string destinationFile) {
 	//Check if the Source and Destination Files Exist
 	struct stat statbuf;
 
-	//The Source File Exists
-	if (!stat(sourceFile.c_str(), &statbuf)) {
+	//The Source File Exists and is a Regular File
+	if (!stat(sourceFile.c_str(), &statbuf) && statbuf.st_mode & S_IFREG) {
 		//The Destination File Does Not Exist and Its Parent Directory Exists
 		if (stat(destinationFile.c_str(), &statbuf) && !stat(destinationPath.c_str(), &statbuf)) {
 			//Set Input File
@@ -493,7 +493,7 @@ void Shell::CopyContents(std::string sourceFile, std::string destinationFile) {
 
 	//The Source File Does Not Exist
 	else {
-		std::cout << "Source File Does Not Exist!" << std::endl;
+		std::cout << "Source File Does Not Exist or is Not a Regular File!" << std::endl;
 	}
 }
 
@@ -560,6 +560,12 @@ void Shell::CopyDir(std::string sourceDir, std::string destinationDir) {
 							if (!mkdir(newDestinationDir.c_str(), 0750)) {
 								CopyDir(newSourceDir, newDestinationDir);
 							}
+						}
+
+						//Call CopyContents to Copy File
+						else if (!stat(newSourceDir.c_str(), &statbuf) && statbuf.st_mode & S_IFREG) {
+							std::string fileDestination = destinationDir + "/" + dp->d_name;
+							CopyContents(newSourceDir, fileDestination);
 						}
 					}
 				}
