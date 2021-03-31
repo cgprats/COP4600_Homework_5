@@ -35,7 +35,7 @@ class Shell {
 		void CheckFile(std::string filename);
 		void CreateFile(std::string filename);
 		void CopyContents(std::string sourceFile, std::string destinationFile);
-		void SetupCopyDir(std::string sourceDir, std::string destinationDir);
+		void CopyToSubdir(std::string sourceDir, std::string destinationDir);
 		void CopyDir(std::string sourceDir, std::string destinationDir);
 };
 
@@ -235,7 +235,7 @@ void Shell::ExecuteCommand(std::string command) {
 	//Copy Directory
 	else if (!splitCommand[0].compare("coppyabode")) {
 		if (splitCommand.size() == 3) {
-			SetupCopyDir(splitCommand[1], splitCommand[2]);
+			CopyToSubdir(splitCommand[1], splitCommand[2]);
 		}
 		else {
 			std::cout << "Incorrect Amount of Parameters!" << std::endl;
@@ -466,17 +466,14 @@ void Shell::CopyContents(std::string sourceFile, std::string destinationFile) {
 		if (stat(destinationFile.c_str(), &statbuf) && !stat(destinationPath.c_str(), &statbuf)) {
 			//Set Input File
 			std::ifstream inFile;
-			inFile.open(sourceFile);
+			inFile.open(sourceFile, std::ios::binary);
 
 			//Set Output File
 			std::ofstream outFile;
-			outFile.open(destinationFile);
+			outFile.open(destinationFile, std::ios::binary);
 
 			//Copy the Data
-			std::string currentLine;
-			while(getline(inFile, currentLine)) {
-				outFile << currentLine << std::endl;
-			}
+			outFile << inFile.rdbuf();
 
 			//Close the Files
 			outFile.close();
@@ -500,8 +497,8 @@ void Shell::CopyContents(std::string sourceFile, std::string destinationFile) {
 	}
 }
 
-//Setup the Filesystem for CopyDir
-void Shell::SetupCopyDir(std::string sourceDir, std::string destinationDir) {
+//Copy into a Subdirectory under the Destination Directory
+void Shell::CopyToSubdir(std::string sourceDir, std::string destinationDir) {
 	//Handle Relative Path
 	sourceDir = ConvertToAbsolute(sourceDir);
 	destinationDir = ConvertToAbsolute(destinationDir);
@@ -518,8 +515,10 @@ void Shell::SetupCopyDir(std::string sourceDir, std::string destinationDir) {
 	struct stat statbuf;
 	if (!stat(sourceDir.c_str(), &statbuf) && statbuf.st_mode & S_IFDIR) {
 		if (!stat(destinationDir.c_str(), &statbuf) && statbuf.st_mode & S_IFDIR) {
+			//Create the Necessary Subdirectory
 			destinationDir = destinationDir + '/' + sourceDirName;
 			mkdir(destinationDir.c_str(), 0750);
+			//Call the CopyDir Function with the Corrected Directories
 			CopyDir(sourceDir, destinationDir);
 		}
 		else {

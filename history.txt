@@ -40,3 +40,7 @@ coppyabode /home/christopher/Documents /home/christopher/temp
 byebye
 coppyabode /home/christopher/Documents /home/christopher/temp
 byebye
+coppy test.txt out.txt
+byebye
+coppy test.txt out.txt
+byebye
