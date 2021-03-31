@@ -33,3 +33,10 @@ coppyabode /home/christopher/Documents /home/christopher/Pictures
 byebye
 coppyabode /home/christopher/Documents /home/christopher
 byebye
+coppydir /home/christopher/Documents /home/christopher/temp
+coppyabode /home/christopher/Documents /home/christopher/temp
+byebye
+coppyabode /home/christopher/Documents /home/christopher/temp
+byebye
+coppyabode /home/christopher/Documents /home/christopher/temp
+byebye

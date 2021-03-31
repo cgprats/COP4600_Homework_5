@@ -35,6 +35,7 @@ class Shell {
 		void CheckFile(std::string filename);
 		void CreateFile(std::string filename);
 		void CopyContents(std::string sourceFile, std::string destinationFile);
+		void SetupCopyDir(std::string sourceDir, std::string destinationDir);
 		void CopyDir(std::string sourceDir, std::string destinationDir);
 };
 
@@ -234,7 +235,7 @@ void Shell::ExecuteCommand(std::string command) {
 	//Copy Directory
 	else if (!splitCommand[0].compare("coppyabode")) {
 		if (splitCommand.size() == 3) {
-			CopyDir(splitCommand[1], splitCommand[2]);
+			SetupCopyDir(splitCommand[1], splitCommand[2]);
 		}
 		else {
 			std::cout << "Incorrect Amount of Parameters!" << std::endl;
@@ -455,7 +456,6 @@ void Shell::CopyContents(std::string sourceFile, std::string destinationFile) {
 			destinationPath = destinationFile.substr(0, i);
 		}
 	}
-	std::cout << destinationPath << std::endl;
 
 	//Check if the Source and Destination Files Exist
 	struct stat statbuf;
@@ -500,6 +500,37 @@ void Shell::CopyContents(std::string sourceFile, std::string destinationFile) {
 	}
 }
 
+//Setup the Filesystem for CopyDir
+void Shell::SetupCopyDir(std::string sourceDir, std::string destinationDir) {
+	//Handle Relative Path
+	sourceDir = ConvertToAbsolute(sourceDir);
+	destinationDir = ConvertToAbsolute(destinationDir);
+
+	//Find the Folder Name of the Source Directory
+	std::string sourceDirName;
+	for (unsigned int i = 0; i < sourceDir.length(); i++) {
+		if (sourceDir[i] == '/') {
+			sourceDirName = sourceDir.substr(i + 1);
+		}
+	}
+
+	//Check if the Source Directory and Destination Directory Exist and are Directories
+	struct stat statbuf;
+	if (!stat(sourceDir.c_str(), &statbuf) && statbuf.st_mode & S_IFDIR) {
+		if (!stat(destinationDir.c_str(), &statbuf) && statbuf.st_mode & S_IFDIR) {
+			destinationDir = destinationDir + '/' + sourceDirName;
+			mkdir(destinationDir.c_str(), 0750);
+			CopyDir(sourceDir, destinationDir);
+		}
+		else {
+			std::cout << "The Destination Directory Either Does Not Exist or is Not a Directory!" << std::endl;
+		}
+	}
+	else {
+		std::cout << "The Source Directory Either Does Not Exist or is Not a Directory!" << std::endl;
+	}
+}
+
 //Copy a Directory and Its Contents into Another
 void Shell::CopyDir(std::string sourceDir, std::string destinationDir) {
 	//Handle Relative Paths
@@ -522,10 +553,14 @@ void Shell::CopyDir(std::string sourceDir, std::string destinationDir) {
 				while((dp = readdir(sdp)) != NULL) {
 					//Do Not Work on . (Alias for Current Dir) or .. (Alias for Parent Dir) Directories
 					if (strcmp(dp->d_name, ".") && strcmp(dp->d_name, "..")) {
-						std::cout << dp->d_name << std::endl;
 						std::string newSourceDir = sourceDir + "/" + dp->d_name;
+						//Recursively Call CopyDir when a Subdirectory is Hit
 						if (!stat(newSourceDir.c_str(), &statbuf) && statbuf.st_mode & S_IFDIR) {
-							CopyDir(newSourceDir, destinationDir);
+							std::string newDestinationDir = destinationDir + "/" + dp->d_name;
+							//Create the Subdirectory at the Destination
+							if (!mkdir(newDestinationDir.c_str(), 0750)) {
+								CopyDir(newSourceDir, newDestinationDir);
+							}
 						}
 					}
 				}
